@@ -7,6 +7,7 @@ import threading
 import types
 import json
 import webbrowser
+import re
 from xml.dom.minidom import parseString
 
 
@@ -219,7 +220,25 @@ class XdebugView(object):
             self.del_breakpoint(row)
 
     def uri(self):
-        return 'file://' + os.path.realpath(self.view.file_name())
+        filename = os.path.realpath(self.view.file_name())
+        local_base = get_setting ( "local_base_path" )
+        remote_base = get_setting ( "remote_base_path" )
+        print 'uri.before:' + filename
+        if local_base and remote_base:
+            filename = re.sub(r'^'+local_base+'(.*)$',remote_base+r'\1' , filename )
+        print 'uri.after:' + filename
+        return 'file://' + filename
+
+    @staticmethod
+    def remote_to_local( filename ):
+        filename = filename[7:] #remover file://
+        print 'rtl.before:' + filename
+        local_base = get_setting ( "local_base_path" )
+        remote_base = get_setting ( "remote_base_path" )
+        if local_base and remote_base:
+            filename = re.sub(r'^'+remote_base+'(.*)$',local_base+r'\1' , filename )
+        print 'rtl.after:' + filename
+        return 'file://' + filename
 
     def lines(self, data=None):
         lines = []
@@ -461,7 +480,8 @@ class XdebugContinueCommand(sublime_plugin.TextCommand):
             if child.nodeName == 'xdebug:message':
                 #print '>>>break ' + child.getAttribute('filename') + ':' + child.getAttribute('lineno')
                 sublime.status_message('Xdebug: breakpoint')
-                xdebug_current = show_file(self.view.window(), child.getAttribute('filename'))
+                filename = XdebugView.remote_to_local( child.getAttribute( 'filename' ) )
+                xdebug_current = show_file(self.view.window(), filename )
                 xdebug_current.current(int(child.getAttribute('lineno')))
 
         if (res.getAttribute('status') == 'break'):
