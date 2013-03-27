@@ -227,7 +227,7 @@ class XdebugView(object):
         if local_base and remote_base:
             filename = re.sub(r'^'+local_base+'(.*)$',remote_base+r'\1' , filename )
             if sublime.platform() == 'windows' and remote_plataform and re.match('(unix|linux|freebsd)', remote_plataform.lower()):
-                filename = filename.replace('\\', '/')
+                filename = filename.replace(os.sep, '/')
 
         return 'file://' + filename
 
@@ -240,7 +240,7 @@ class XdebugView(object):
         if local_base and remote_base:
             filename = re.sub(r'^'+remote_base+'(.*)$',local_base+r'\1' , filename )
             if sublime.platform() == 'windows' and remote_plataform and re.match('(unix|linux|freebsd)', remote_plataform.lower()):
-                filename = filename.replace('\\', '/')
+                filename = filename.replace('/', os.sep)
 
         return 'file://' + filename
 
