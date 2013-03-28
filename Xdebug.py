@@ -223,8 +223,12 @@ class XdebugView(object):
         filename = os.path.realpath(self.view.file_name())
         local_base = get_setting ( "local_base_path" )
         remote_base = get_setting ( "remote_base_path" )
+        remote_plataform = get_setting ( "remote_plataform" )
         if local_base and remote_base:
             filename = re.sub(r'^'+local_base+'(.*)$',remote_base+r'\1' , filename )
+            if sublime.platform() == 'windows' and remote_plataform and re.match('(unix|linux|freebsd)', remote_plataform.lower()):
+                filename = filename.replace(os.sep, '/')
+
         return 'file://' + filename
 
     @staticmethod
@@ -232,8 +236,12 @@ class XdebugView(object):
         filename = filename[7:] #remover file://
         local_base = get_setting ( "local_base_path" )
         remote_base = get_setting ( "remote_base_path" )
+        remote_plataform = get_setting ( "remote_plataform" )
         if local_base and remote_base:
             filename = re.sub(r'^'+remote_base+'(.*)$',local_base+r'\1' , filename )
+            if sublime.platform() == 'windows' and remote_plataform and re.match('(unix|linux|freebsd)', remote_plataform.lower()):
+                filename = filename.replace('/', os.sep)
+
         return 'file://' + filename
 
     def lines(self, data=None):
@@ -666,9 +674,16 @@ def show_file(window, uri):
     '''
     Open or focus a window
     '''
+    remote_plataform = get_setting ( "remote_plataform" )
+
     if window:
         window.focus_group(0)
-    if sublime.platform() == 'windows':
+
+    prataform = sublime.platform()
+    if remote_plataform:
+        plataform = remote_plataform
+
+    if  plataform == 'windows':
         transport, filename = uri.split(':///', 1)  # scheme:///C:/path/file => scheme, C:/path/file
     else:
         transport, filename = uri.split('://', 1)  # scheme:///path/file => scheme, /path/file
